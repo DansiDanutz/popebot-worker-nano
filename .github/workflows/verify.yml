@@ -1,0 +1,30 @@
+name: Verify placeholder contract
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - name: Reject executable or deployable content
+        shell: bash
+        run: |
+          set -euo pipefail
+          allowed='^(README\.md|greptile\.json|\.gitignore|\.github/workflows/verify\.yml)$'
+          unexpected="$(git ls-files | grep -Ev "$allowed" || true)"
+          if [[ -n "$unexpected" ]]; then
+            echo "Unexpected files violate the non-executable placeholder contract:"
+            printf '%s\n' "$unexpected"
+            exit 1
+          fi
+          grep -Fq 'intentional non-executable placeholder' README.md
+          grep -Fq 'No GitHub, Vercel, or other hosted deployment is required' README.md
+          jq -e '.statusCheck == true and .triggerOnUpdates == true' greptile.json
