@@ -1,0 +1,8 @@
+{
+  "commentTypes": ["logic", "syntax"],
+  "strictness": 2,
+  "triggerOnUpdates": true,
+  "statusCheck": true,
+  "comment": "AI-generated review; verified checks and repository-contract evidence remain merge gates.",
+  "instructions": "Review this repository as an intentional non-executable placeholder. Flag any executable source, dependency manifest, deployment configuration, credential material, generated runtime state, or claim that a live worker is operated from this repository. Require file and line evidence; ignore style-only concerns."
+}
