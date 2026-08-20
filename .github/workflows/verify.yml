@@ -40,7 +40,14 @@ jobs:
           secret_prefix='$'
           secret_suffix='{{ secrets.'
           ! grep -Fq "${secret_prefix}${secret_suffix}" .github/workflows/verify.yml
-          if jq -r '.. | strings' greptile.json | grep -Eiq '(curl[^[:alnum:]]*\|[[:space:]]*(ba)?sh|npx[[:space:]]+vercel|npm[[:space:]]+run|bun[[:space:]]+run|docker[[:space:]]+(build|run|push)|ssh[[:space:]]|scp[[:space:]]|"?(command|script)"?[[:space:]]*:)'; then
-            echo 'Executable or deployment command found in greptile.json'
+          bad_pipe='cu''rl[^[:alnum:]]*\|[[:space:]]*(ba)?sh'
+          bad_vercel='npx[[:space:]]+ver''cel'
+          bad_package='(npm|bun)[[:space:]]+r''un'
+          bad_container='dock''er[[:space:]]+(build|run|push)'
+          bad_remote='(s''sh|s''cp)[[:space:]]'
+          bad_field='"?(command|script)"?[[:space:]]*:'
+          prohibited="(${bad_pipe}|${bad_vercel}|${bad_package}|${bad_container}|${bad_remote}|${bad_field})"
+          if { jq -r '.. | strings' greptile.json; cat .github/workflows/verify.yml; } | grep -Eiq "$prohibited"; then
+            echo 'Executable or deployment command found in an allowlisted policy file'
             exit 1
           fi
