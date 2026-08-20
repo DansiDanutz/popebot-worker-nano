@@ -27,4 +27,18 @@ jobs:
           fi
           grep -Fq 'intentional non-executable placeholder' README.md
           grep -Fq 'No GitHub, Vercel, or other hosted deployment is required' README.md
-          jq -e '.statusCheck == true and .triggerOnUpdates == true' greptile.json
+          jq -e '
+            (keys | sort) == (["comment", "commentTypes", "instructions", "statusCheck", "strictness", "triggerOnUpdates"] | sort) and
+            .statusCheck == true and
+            .triggerOnUpdates == true and
+            .strictness == 2
+          ' greptile.json
+          test "$(grep -Ec '^[[:space:]]*- uses:' .github/workflows/verify.yml)" -eq 1
+          test "$(grep -Ec '^[[:space:]]*run:' .github/workflows/verify.yml)" -eq 1
+          test "$(grep -Ec '^[[:space:]]*- name:' .github/workflows/verify.yml)" -eq 1
+          ! grep -Eq '^  (actions|checks|deployments|id-token|packages|pull-requests|security-events|statuses):' .github/workflows/verify.yml
+          ! grep -Fq '${{ secrets.' .github/workflows/verify.yml
+          if jq -r '.. | strings' greptile.json | grep -Eiq '(curl[^[:alnum:]]*\|[[:space:]]*(ba)?sh|npx[[:space:]]+vercel|npm[[:space:]]+run|bun[[:space:]]+run|docker[[:space:]]+(build|run|push)|ssh[[:space:]]|scp[[:space:]]|"?(command|script)"?[[:space:]]*:)'; then
+            echo 'Executable or deployment command found in greptile.json'
+            exit 1
+          fi
